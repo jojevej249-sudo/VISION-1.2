@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071426"><title>VISION AI Mobile</title>
+<style>
+:root{color-scheme:dark;--bg:#06101f;--panel:#0d1d32;--line:#1c4164;--blue:#42c8ff;--txt:#eaf6ff;--muted:#9bb5ca}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,#10375a 0,#06101f 48%);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100dvh}
+main{width:min(100%,680px);margin:auto;padding:16px 14px calc(18px + env(safe-area-inset-bottom))}
+header{text-align:center;padding:18px 8px 14px}.orb{width:112px;height:112px;border:2px solid #55d8ff;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;box-shadow:0 0 18px #20baff88,inset 0 0 22px #20baff55;animation:pulse 3s infinite}.orb span{font-size:28px;font-weight:800;letter-spacing:3px;color:#a6edff;text-shadow:0 0 15px #42c8ff}h1{font-size:25px;margin:4px}.sub{color:var(--muted);font-size:13px}
+@keyframes pulse{50%{box-shadow:0 0 34px #20baffaa,inset 0 0 30px #20baff88}}
+.status{display:flex;justify-content:center;gap:8px;align-items:center;color:#a9c7dc;font-size:12px;margin:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:#55d8ff;box-shadow:0 0 10px #55d8ff}
+.chat{background:#081729cc;border:1px solid var(--line);border-radius:18px;padding:12px;height:min(44dvh,390px);min-height:230px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:90%;padding:11px 13px;border-radius:15px;line-height:1.6;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}.bot{background:#102d48;border:1px solid #205174;align-self:flex-start;border-bottom-right-radius:4px}.user{background:#07577b;align-self:flex-end;border-bottom-left-radius:4px}
+.controls{display:flex;gap:8px;margin-top:10px}.controls input,.settings input{min-width:0;flex:1;background:#0b1d31;color:white;border:1px solid var(--line);border-radius:13px;padding:13px;font-size:15px;outline:none}.btn{border:1px solid #23648b;background:#103657;color:#eafaff;border-radius:13px;padding:11px 14px;font-size:14px}.send{background:#0877a6}.mic.listening{background:#9b263a;border-color:#ff758b}
+.actions{display:flex;gap:8px;margin-top:9px}.actions button{flex:1}
+.settings{margin-top:12px;background:#0b1b2e;border:1px solid var(--line);border-radius:15px;padding:12px}.settings summary{cursor:pointer;color:#aeeaff;font-size:14px}.settings label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}.settings input{width:100%;font-size:13px}.hint{font-size:11px;color:var(--muted);line-height:1.6;margin:9px 0 0}
+footer{text-align:center;color:#7593ac;font-size:11px;padding:14px}
+</style></head>
+<body><main>
+<header><div class="orb"><span>VISION</span></div><h1>VISION AI</h1><div class="sub">مساعدك الذكي — نسخة الهاتف</div><div class="status"><i class="dot"></i><span id="status">جاهز للعمل على الهاتف</span></div></header>
+<section id="chat" class="chat" aria-live="polite"><div class="msg bot">مرحباً! أنا VISION. يمكنك الكتابة أو الضغط على الميكروفون للتحدث. جرّب: «ابحث عن الطقس» أو «افتح يوتيوب».</div></section>
+<div class="controls"><input id="prompt" placeholder="اكتب رسالتك هنا..." autocomplete="off"><button class="btn send" id="send">إرسال</button></div>
+<div class="actions"><button class="btn mic" id="mic">🎙️ تحدث</button><button class="btn" id="stop">إيقاف الصوت</button><button class="btn" id="clear">مسح المحادثة</button></div>
+<details class="settings"><summary>⚙️ إعداد الذكاء الاصطناعي (اختياري)</summary><label for="api">مفتاح OpenRouter API</label><input id="api" type="password" placeholder="الصق مفتاح API هنا"><label for="model">النموذج</label><input id="model" value="openrouter/free"><p class="hint">يمكن استخدام الواجهة والأوامر الأساسية دون مفتاح. للحصول على إجابات ذكاء اصطناعي مفتوحة، أضف مفتاح API خاصاً بك. يُحفظ المفتاح في هذا المتصفح فقط، ولا تضع مفتاحاً سرياً على هاتف مشترك.</p><button class="btn" id="save">حفظ الإعدادات</button></details>
+<footer>VISION Mobile • يعمل من متصفح Chrome • يحتاج الإنترنت لخدمات الذكاء الاصطناعي والتعرف الصوتي</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), chat=$('chat');
+const add=(text,who='bot')=>{const d=document.createElement('div');d.className='msg '+who;d.textContent=text;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d};
+const status=t=>$('status').textContent=t;
+const speak=t=>{if(!('speechSynthesis'in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ar-SA';u.rate=1;window.speechSynthesis.speak(u)};
+const saved=()=>{try{$('api').value=localStorage.getItem('vision_api')||'';$('model').value=localStorage.getItem('vision_model')||'openrouter/free'}catch(e){}};
+$('save').onclick=()=>{try{localStorage.setItem('vision_api',$('api').value.trim());localStorage.setItem('vision_model',$('model').value.trim()||'openrouter/free');status('تم حفظ الإعدادات على هذا الهاتف')}catch(e){status('تعذر الحفظ في المتصفح')}};
+$('stop').onclick=()=>window.speechSynthesis?.cancel();
+$('clear').onclick=()=>{chat.innerHTML='';add('تم مسح المحادثة. كيف أساعدك؟')};
+function localReply(q){
+ const s=q.toLowerCase();
+ if(/مرحبا|السلام عليكم|اهلا/.test(q))return 'أهلاً بك! أنا VISION، كيف يمكنني مساعدتك؟';
+ if(/افتح.*يوتيوب|youtube/.test(s)){window.open('https://m.youtube.com','_blank');return 'فتحت يوتيوب في نافذة جديدة.'}
+ if(/افتح.*جوجل|google/.test(s)){window.open('https://www.google.com','_blank');return 'فتحت Google.'}
+ if(/ابحث عن|بحث عن/.test(q)){const term=q.replace(/ابحث عن|بحث عن/g,'').trim();window.open('https://www.google.com/search?q='+encodeURIComponent(term),'_blank');return 'فتحت نتائج البحث عن: '+term}
+ if(/الوقت|الساعة/.test(q))return 'الوقت الآن '+new Date().toLocaleTimeString('ar-DZ',{hour:'2-digit',minute:'2-digit'});
+ if(/التاريخ|اليوم/.test(q))return 'تاريخ اليوم '+new Date().toLocaleDateString('ar-DZ');
+ return 'وصلتني رسالتك. للحصول على إجابة ذكية مفصلة، أضف مفتاح OpenRouter في الإعدادات. يمكنني حالياً فتح البحث والمواقع وتنفيذ الأوامر الأساسية.';
+}
+async function send(){
+ const q=$('prompt').value.trim();if(!q)return;$('prompt').value='';add(q,'user');status('أفكر...');
+ const key=$('api').value.trim();let answer;
+ if(key){
+  try{const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({model:$('model').value.trim()||'openrouter/free',messages:[{role:'system',content:'You are VISION, a helpful Arabic-speaking assistant. Reply in clear Arabic.'},{role:'user',content:q}]})});
+  const data=await r.json();if(!r.ok)throw new Error(data.error?.message||'تعذر الاتصال بالخدمة');answer=data.choices?.[0]?.message?.content||'لم يصل رد من النموذج.';
+  }catch(e){answer='تعذر الاتصال بالذكاء الاصطناعي: '+e.message+'\nتحقق من المفتاح والإنترنت.'}
+ }else answer=localReply(q);
+ add(answer);status('جاهز');speak(answer);
+}
+$('send').onclick=send;$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec;
+if(SR){rec=new SR();rec.lang='ar-DZ';rec.interimResults=false;rec.maxAlternatives=1;rec.onstart=()=>{$('mic').classList.add('listening');status('أستمع إليك...')};rec.onend=()=>{$('mic').classList.remove('listening');status('جاهز')};rec.onerror=e=>{status('تعذر استخدام الميكروفون: '+e.error);$('mic').classList.remove('listening')};rec.onresult=e=>{$('prompt').value=e.results[0][0].transcript;send()};$('mic').onclick=()=>{try{rec.start()}catch(e){status('الميكروفون يعمل بالفعل')}}}
+else{$('mic').onclick=()=>{status('التعرف الصوتي غير مدعوم في هذا المتصفح؛ استخدم الكتابة')};$('mic').title='التعرف الصوتي غير مدعوم'}
+saved();
+</script></body></html>
