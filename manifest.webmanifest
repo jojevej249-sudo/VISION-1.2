@@ -1,0 +1,11 @@
+{
+  "name": "VISION AI Mobile",
+  "short_name": "VISION AI",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#06101f",
+  "theme_color": "#071426",
+  "description": "مساعد VISION الذكي باللغة العربية"
+}
